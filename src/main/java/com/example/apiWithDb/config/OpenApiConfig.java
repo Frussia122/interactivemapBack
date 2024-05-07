@@ -20,7 +20,7 @@ import io.swagger.v3.oas.annotations.servers.Server;
         servers = {
                 @Server(
                         description = "local ENV",
-                        url = "http://localhost:8080"
+                        url = "http://localhost:3001"
                 ),
                 @Server(
                         description = "Remote ENV",

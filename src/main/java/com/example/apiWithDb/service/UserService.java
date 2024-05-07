@@ -1,7 +1,6 @@
 package com.example.apiWithDb.service;
 
-import com.example.apiWithDb.dto.CredentialsDto;
-import com.example.apiWithDb.dto.SignUpDto;
+import com.example.apiWithDb.dto.AuthDto;
 import com.example.apiWithDb.dto.UserDto;
 import com.example.apiWithDb.entities.User;
 import com.example.apiWithDb.exception.AppException;
@@ -23,39 +22,34 @@ public class UserService {
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
 
-    public UserDto findBylogin(String login)
+    public UserDto findByEmail(String email)
     {
-        User user = userRepository.findBylogin(login)
-                .orElseThrow(() -> new AppException("Unknown user", HttpStatus.NOT_FOUND));
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AppException("Email не найден", HttpStatus.NOT_FOUND));
         return userMapper.toUserDto(user);
     }
 
-    public UserDto login(CredentialsDto credentialsDto){
-        User user = userRepository.findBylogin(credentialsDto.getLogin())
+    public UserDto login(AuthDto authDto){
+        User user = userRepository.findByEmail(authDto.getEmail())
                 .orElseThrow(() -> new AppException("Unknown user", HttpStatus.NOT_FOUND));
 
-        if(passwordEncoder.matches(CharBuffer.wrap(credentialsDto.getPassword()),user.getPassword()))
+        if(passwordEncoder.matches(CharBuffer.wrap(authDto.getPassword()),user.getPassword()))
         {
             return userMapper.toUserDto(user);
         }
         throw new AppException("Invalid password", HttpStatus.BAD_REQUEST);
     }
 
-    public UserDto register(SignUpDto userDto)
+    public UserDto register(AuthDto authDto)
     {
-        Optional<User> optionalUser = userRepository.findBylogin(userDto.getLogin());
-
+        Optional<User> optionalUser = userRepository.findByEmail(authDto.getEmail());
         if(optionalUser.isPresent())
         {
-            throw new AppException("Login alrdy existst", HttpStatus.BAD_REQUEST);
+            throw new AppException("Login already exist", HttpStatus.CONFLICT);
         }
-
-        User user = userMapper.signUpToUser(userDto);
-
-        user.setPassword(passwordEncoder.encode(CharBuffer.wrap(userDto.getPassword())));
-
+        User user = userMapper.signUpToUser(authDto);
+        user.setPassword(passwordEncoder.encode(CharBuffer.wrap(authDto.getPassword())));
         User saveduser = userRepository.save(user);
-
         return userMapper.toUserDto(user);
     }
 

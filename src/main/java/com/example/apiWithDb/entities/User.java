@@ -19,20 +19,8 @@ public class User {
     @Column(nullable = false)
     private Long id;
 
-    @Column(name = "first_name",nullable = false)
-    private String firstName;
-
-    @Column(name = "lastName", nullable = false)
-    private String lastName;
-
-    @Column(nullable = false)
-    private String login;
-
-    @Column(nullable = false)
-    private String country;
-
-    @Column(nullable = false)
-    private String role;
+    @Column(nullable = true, name = "email")
+    private String email;
 
     @Column(nullable = false)
     private String password;

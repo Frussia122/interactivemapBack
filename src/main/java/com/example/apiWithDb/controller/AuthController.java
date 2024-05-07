@@ -1,8 +1,7 @@
 package com.example.apiWithDb.controller;
 
 import com.example.apiWithDb.config.UserAuthProvider;
-import com.example.apiWithDb.dto.CredentialsDto;
-import com.example.apiWithDb.dto.SignUpDto;
+import com.example.apiWithDb.dto.AuthDto;
 import com.example.apiWithDb.dto.UserDto;
 import com.example.apiWithDb.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -20,19 +19,19 @@ public class AuthController {
     private final UserService userService;
     private final UserAuthProvider userAuthProvider;
 
-    @PostMapping("/login")
-    public ResponseEntity<UserDto> login(@RequestBody CredentialsDto credentialsDto){
-       UserDto user  = userService.login(credentialsDto);
+    @PostMapping("/auth/login")
+    public ResponseEntity<UserDto> login(@RequestBody AuthDto authDto){
+       UserDto user  = userService.login(authDto);
 
-        user.setToken(userAuthProvider.createToken(user.getLogin()));
+        user.setToken(userAuthProvider.createToken(user.getEmail()));
         return ResponseEntity.ok(user);
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<UserDto> register(@RequestBody SignUpDto signUpDto)
+    @PostMapping("/auth/registration")
+    public ResponseEntity<UserDto> register(@RequestBody AuthDto authDto)
     {
-        UserDto user = userService.register(signUpDto);
-        user.setToken(userAuthProvider.createToken(user.getLogin()));
+        UserDto user = userService.register(authDto);
+        user.setToken(userAuthProvider.createToken(user.getEmail()));
         return ResponseEntity.created(URI.create("/users/" + user.getId()))
                 .body(user);
     }

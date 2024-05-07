@@ -31,11 +31,11 @@ public class UserAuthProvider {
         secretKey = Base64.getEncoder().encodeToString(secretKey.getBytes());
     }
 
-    public String createToken(String login){
+    public String createToken(String email){
         Date now = new Date();
         Date validity = new Date(now.getTime() + 3_600_000);
         return JWT.create()
-                .withIssuer(login)
+                .withIssuer(email)
                 .withIssuedAt(now)
                 .withExpiresAt(validity)
                 .sign(Algorithm.HMAC256(secretKey));
@@ -48,7 +48,7 @@ public class UserAuthProvider {
 
         DecodedJWT decoded = verifier.verify(token);
 
-        UserDto user = userService.findBylogin(decoded.getIssuer());
+        UserDto user = userService.findByEmail(decoded.getIssuer());
 
         return new UsernamePasswordAuthenticationToken(user, null, Collections.emptyList());
     }

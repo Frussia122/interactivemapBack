@@ -30,8 +30,7 @@ public class SecurityConfig {
               .and()
               .authorizeHttpRequests((requests) -> requests
                       .requestMatchers(
-                              "/login",
-                              "/register",
+                              "/auth/**",
                               "/v2/api-docs",
                               "/v2/api-docs/**",
                               "/v3/api-docs",

@@ -19,7 +19,6 @@ import java.util.Objects;
 import java.util.Random;
 
 @RestController
-@RequestMapping("/forgotPassword")
 public class ForgotPasswordController {
 
     private final UserRepository userRepository;
@@ -34,10 +33,10 @@ public class ForgotPasswordController {
     }
 
     //Send mail for email verification
-    @PostMapping("/verifyMail/{email}")
-    public ResponseEntity<String> verifyEmail(@PathVariable String email){
+    @PostMapping("/auth/check-email/")
+    public ResponseEntity<String> verifyEmail(@RequestBody String email){
 
-        User user = userRepository.findBylogin(email)
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException("Unknown user", HttpStatus.NOT_FOUND));
 
         int otp = otpGenerator();
@@ -59,13 +58,13 @@ public class ForgotPasswordController {
         return ResponseEntity.ok("OTP send for verification!");
     }
 
-    @PostMapping("/verifyOtp/{otp}/{email}")
-    public ResponseEntity<String> verifyOtp(@PathVariable Integer otp, @PathVariable String email){
+    @PostMapping("/auth/confirm-email")
+    public ResponseEntity<String> verifyOtp(@RequestBody String email, @RequestBody String code){
 
-        User user = userRepository.findBylogin(email)
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException("Unknown user", HttpStatus.NOT_FOUND));
 
-        ForgotPassword fp = forgotPasswordRepository.findByOtpAndUser(otp,user)
+        ForgotPassword fp = forgotPasswordRepository.findByOtpAndUser(code,user)
                 .orElseThrow(() -> new AppException("Invalid OTP for email", HttpStatus.EXPECTATION_FAILED));
         if(fp.getExpirationTime().before(Date.from(Instant.now()))){
             forgotPasswordRepository.deleteById(fp.getFpid());
@@ -75,11 +74,11 @@ public class ForgotPasswordController {
         return ResponseEntity.ok("OTP verifed");
     }
 
-    @PostMapping("/changePassword/{email}")
+    @PostMapping("/auth/change-password")
     public ResponseEntity<String> changePasswordHandler(@RequestBody ChangePassword changePassword,
-                                                        @PathVariable String email){
-        if(!Objects.equals(changePassword.password(), changePassword.repeatPassword())) {
-            return new ResponseEntity<>("Please enter the password again!",HttpStatus.EXPECTATION_FAILED);
+                                                        @RequestBody String email){
+        if(!Objects.equals(changePassword.password(), changePassword.confirmPassword())) {
+            return new ResponseEntity<>("Please enter the password again!",HttpStatus.BAD_REQUEST);
         }
 
         String encodedPassword = passwordEncoder.encode(changePassword.password());
