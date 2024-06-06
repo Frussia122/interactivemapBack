@@ -4,6 +4,8 @@ import com.example.apiWithDb.entities.ForgotPassword;
 import com.example.apiWithDb.entities.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.transaction.annotation.Transactional;
+
 
 import java.util.Optional;
 
@@ -11,4 +13,7 @@ public interface ForgotPasswordRepository extends JpaRepository<ForgotPassword,I
 
     @Query("select fp from ForgotPassword fp where fp.otp = ?1 and fp.user = ?2")
     Optional<ForgotPassword> findByOtpAndUser(String code, User user);
+
+    @Transactional
+    void deleteByUser(User user);
 }

@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(nullable = false)
     private Long id;
 
@@ -24,6 +24,9 @@ public class User {
 
     @Column(nullable = false)
     private String password;
+
+    private String name;
+    private String surName;
 
     @OneToOne(mappedBy = "user")
     private ForgotPassword forgotPassword;

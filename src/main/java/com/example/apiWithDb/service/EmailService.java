@@ -17,7 +17,7 @@ public class EmailService {
     public void sensSimpleMessage(MailBody mailBody) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(mailBody.to());
-        message.setFrom("viewerstuff@gmail.com");
+        message.setFrom("traveler.notify@gmail.com");
         message.setSubject(mailBody.subject());
         message.setText(mailBody.text());
 

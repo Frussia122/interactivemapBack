@@ -1,5 +1,6 @@
 package com.example.apiWithDb.controller;
 
+import com.example.apiWithDb.dto.CheckEmail;
 import com.example.apiWithDb.dto.MailBody;
 import com.example.apiWithDb.entities.ForgotPassword;
 import com.example.apiWithDb.entities.User;
@@ -33,15 +34,16 @@ public class ForgotPasswordController {
     }
 
     //Send mail for email verification
-    @PostMapping("/auth/check-email/")
-    public ResponseEntity<String> verifyEmail(@RequestBody String email){
+    @PostMapping("/auth/check-email")
+    public ResponseEntity<String> verifyEmail(@RequestBody CheckEmail checkEmail){
+        String currentEmail = checkEmail.getEmail();
 
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new AppException("Unknown user", HttpStatus.NOT_FOUND));
+        User user = userRepository.findByEmail(currentEmail)
+                .orElseThrow(() -> new AppException("Email не найден", HttpStatus.NOT_FOUND));
 
         int otp = otpGenerator();
         MailBody mailBody = MailBody.builder()
-                .to(email)
+                .to(currentEmail)
                 .text("Ваш код для восстановления пароля : " + otp)
                 .subject("Восстановление пароля")
                 .build();
@@ -53,36 +55,36 @@ public class ForgotPasswordController {
                 .build();
 
         emailService.sensSimpleMessage(mailBody);
+        forgotPasswordRepository.deleteByUser(user);
         forgotPasswordRepository.save(fp);
 
         return ResponseEntity.ok("OTP send for verification!");
     }
 
     @PostMapping("/auth/confirm-email")
-    public ResponseEntity<String> verifyOtp(@RequestBody String email, @RequestBody String code){
+    public ResponseEntity<String> verifyOtp(@RequestBody CheckEmail checkEmail){
 
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findByEmail(checkEmail.getEmail())
                 .orElseThrow(() -> new AppException("Unknown user", HttpStatus.NOT_FOUND));
 
-        ForgotPassword fp = forgotPasswordRepository.findByOtpAndUser(code,user)
-                .orElseThrow(() -> new AppException("Invalid OTP for email", HttpStatus.EXPECTATION_FAILED));
+        ForgotPassword fp = forgotPasswordRepository.findByOtpAndUser(checkEmail.getCode(),user)
+                .orElseThrow(() -> new AppException("Invalid OTP for email", HttpStatus.NOT_FOUND));
         if(fp.getExpirationTime().before(Date.from(Instant.now()))){
             forgotPasswordRepository.deleteById(fp.getFpid());
-            return new ResponseEntity<>("OTP has expired", HttpStatus.EXPECTATION_FAILED);
+            return new ResponseEntity<>("OTP has expired", HttpStatus.GONE);
         }
 
         return ResponseEntity.ok("OTP verifed");
     }
 
     @PostMapping("/auth/change-password")
-    public ResponseEntity<String> changePasswordHandler(@RequestBody ChangePassword changePassword,
-                                                        @RequestBody String email){
-        if(!Objects.equals(changePassword.password(), changePassword.confirmPassword())) {
+    public ResponseEntity<String> changePasswordHandler(@RequestBody CheckEmail checkEmail){
+        if(!Objects.equals(checkEmail.getPassword(), checkEmail.getConfirmPassword())) {
             return new ResponseEntity<>("Please enter the password again!",HttpStatus.BAD_REQUEST);
         }
 
-        String encodedPassword = passwordEncoder.encode(changePassword.password());
-        userRepository.updatePassword(email, encodedPassword);
+        String encodedPassword = passwordEncoder.encode(checkEmail.getPassword());
+        userRepository.updatePassword(checkEmail.getEmail(), encodedPassword);
 
         return ResponseEntity.ok("Password has been changed");
     }

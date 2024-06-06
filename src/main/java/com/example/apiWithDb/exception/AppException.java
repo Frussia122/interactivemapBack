@@ -4,13 +4,13 @@ import org.springframework.http.HttpStatus;
 
 public class AppException extends RuntimeException {
 
-    private final HttpStatus code;
+    private final HttpStatus statusCode;
     public AppException(String message, HttpStatus code) {
         super(message);
-        this.code = code;
+        this.statusCode = code;
     }
 
     public HttpStatus getCode() {
-        return code;
+        return statusCode;
     }
 }

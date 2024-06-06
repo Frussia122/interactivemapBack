@@ -13,8 +13,11 @@ public class RestExceptionHandler {
     @ResponseBody
     public ResponseEntity<ErrorDto> handleException(AppException ex)
     {
-        return ResponseEntity.status(ex.getCode())
-                .body(ErrorDto.builder().message(ex.getMessage()).build());
+        return ResponseEntity.status(ex.getCode().value())
+                .body(ErrorDto.builder()
+                        .statusCode(ex.getCode().value())
+                        .message(ex.getMessage())
+                        .build());
     }
 
 }

@@ -8,6 +8,7 @@ import com.example.apiWithDb.mappers.UserMapper;
 import com.example.apiWithDb.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -22,36 +23,46 @@ public class UserService {
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
 
-    public UserDto findByEmail(String email)
-    {
+    // Existing methods ...
+
+    public UserDto findByEmail(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException("Email не найден", HttpStatus.NOT_FOUND));
         return userMapper.toUserDto(user);
     }
 
-    public UserDto login(AuthDto authDto){
+    public UserDto login(AuthDto authDto) {
         User user = userRepository.findByEmail(authDto.getEmail())
                 .orElseThrow(() -> new AppException("Unknown user", HttpStatus.NOT_FOUND));
 
-        if(passwordEncoder.matches(CharBuffer.wrap(authDto.getPassword()),user.getPassword()))
-        {
+        if (passwordEncoder.matches(CharBuffer.wrap(authDto.getPassword()), user.getPassword())) {
             return userMapper.toUserDto(user);
         }
         throw new AppException("Invalid password", HttpStatus.BAD_REQUEST);
     }
 
-    public UserDto register(AuthDto authDto)
-    {
+    public UserDto register(AuthDto authDto) {
         Optional<User> optionalUser = userRepository.findByEmail(authDto.getEmail());
-        if(optionalUser.isPresent())
-        {
+        if (optionalUser.isPresent()) {
             throw new AppException("Login already exist", HttpStatus.CONFLICT);
         }
         User user = userMapper.signUpToUser(authDto);
         user.setPassword(passwordEncoder.encode(CharBuffer.wrap(authDto.getPassword())));
-        User saveduser = userRepository.save(user);
+        User savedUser = userRepository.save(user);
         return userMapper.toUserDto(user);
     }
 
+    public User findUserByToken(Authentication authentication) {
+        UserDto userDto = (UserDto) authentication.getPrincipal();
+        return userRepository.findByEmail(userDto.getEmail())
+                .orElseThrow(() -> new AppException("Unknown user", HttpStatus.NOT_FOUND));
+    }
+
+    public UserDto currentUser(Authentication authentication) {
+        User user = findUserByToken(authentication);
+        UserDto userDto = userMapper.toUserDto(user);
+        // Другие поля, если они есть
+        return userDto;
+    }
 
 }
